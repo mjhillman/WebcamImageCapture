@@ -1,5 +1,4 @@
 using HITS.LIB.WeakEvents;
-using System.IO;
 
 namespace WebcamImageCapture
 {
@@ -46,6 +45,7 @@ namespace WebcamImageCapture
                 rbWebcam2.Checked = true;
             }
             cbResolution.SelectedIndex = Properties.Settings.Default.ResolutionIndex;
+            ServiceStopped();
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
@@ -61,6 +61,36 @@ namespace WebcamImageCapture
             Properties.Settings.Default.WebcamIndex = webcamIndex;
             Properties.Settings.Default.ResolutionIndex = cbResolution.SelectedIndex;
             Properties.Settings.Default.Save();
+        }
+
+        private void ServiceRunning()
+        {
+            rbWebcam0.Enabled = false;
+            rbWebcam1.Enabled = false;
+            rbWebcam2.Enabled = false;
+            cbResolution.Enabled = false;
+            tbFrequency.Enabled = false;
+            cbAuto.Enabled = true;
+            butStopService.Enabled = true;
+            butStartService.Enabled = false;
+            tbPath.Enabled = false;
+            tbImage.Enabled = true;
+            DeleteAllButton.Enabled = false;
+        }
+
+        private void ServiceStopped()
+        {
+            rbWebcam0.Enabled = true;
+            rbWebcam1.Enabled = true;
+            rbWebcam2.Enabled = true;
+            cbResolution.Enabled = true;
+            tbFrequency.Enabled = true;
+            cbAuto.Enabled = true;
+            butStopService.Enabled = false;
+            butStartService.Enabled = true;
+            tbPath.Enabled = true;
+            tbImage.Enabled = false;
+            DeleteAllButton.Enabled = true;
         }
 
         void OnNewImage(object sender, StandardMessage m)   //must have this signature except for method name
@@ -194,6 +224,7 @@ namespace WebcamImageCapture
         {
             try
             {
+                ServiceRunning();
                 int webcamIndex = 0;
                 if (rbWebcam1.Checked) webcamIndex = 1;
                 else if (rbWebcam2.Checked) webcamIndex = 2;
@@ -210,6 +241,7 @@ namespace WebcamImageCapture
             catch (Exception ex)
             {
                 MessageBox.Show(ex.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ServiceStopped();
             }
         }
 
@@ -219,11 +251,13 @@ namespace WebcamImageCapture
             {
                 this.Cursor = Cursors.WaitCursor;
                 captureService.StopAsync(new CancellationToken());
+                ServiceStopped();
                 this.Cursor = Cursors.Default;
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ServiceStopped();
             }
         }
 

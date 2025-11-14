@@ -18,6 +18,8 @@ namespace WebcamImageCapture
 
         public Task StartAsync(CancellationToken cancellationToken, int webcamIndex, int frequency, int width, int height, string path)
         {
+            _capture?.Dispose();
+            _timer?.Dispose();
             _capturePath = path;
             _capture = new VideoCapture(webcamIndex); // 0=default webcam 1=external webcam
             _capture.Set(VideoCaptureProperties.FrameWidth, width);
