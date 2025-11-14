@@ -42,7 +42,7 @@
             rbWebcam1 = new RadioButton();
             lblFrequency = new Label();
             tbFrequency = new TrackBar();
-            label1 = new Label();
+            lblImagePath = new Label();
             DeleteAllButton = new Button();
             PreviousButton = new Button();
             NextButton = new Button();
@@ -87,7 +87,7 @@
             splitContainer1.Panel1.Controls.Add(rbWebcam1);
             splitContainer1.Panel1.Controls.Add(lblFrequency);
             splitContainer1.Panel1.Controls.Add(tbFrequency);
-            splitContainer1.Panel1.Controls.Add(label1);
+            splitContainer1.Panel1.Controls.Add(lblImagePath);
             splitContainer1.Panel1.Controls.Add(DeleteAllButton);
             splitContainer1.Panel1.Controls.Add(PreviousButton);
             splitContainer1.Panel1.Controls.Add(NextButton);
@@ -219,14 +219,14 @@
             tbFrequency.Value = 3;
             tbFrequency.ValueChanged += tbFrequency_ValueChanged;
             // 
-            // label1
+            // lblImagePath
             // 
-            label1.AutoSize = true;
-            label1.Location = new Point(612, 135);
-            label1.Name = "label1";
-            label1.Size = new Size(73, 17);
-            label1.TabIndex = 5;
-            label1.Text = "Image Path";
+            lblImagePath.AutoSize = true;
+            lblImagePath.Location = new Point(508, 133);
+            lblImagePath.Name = "lblImagePath";
+            lblImagePath.Size = new Size(73, 17);
+            lblImagePath.TabIndex = 5;
+            lblImagePath.Text = "Image Path";
             // 
             // DeleteAllButton
             // 
@@ -299,7 +299,7 @@
         private Button PreviousButton;
         private Button NextButton;
         private Button DeleteAllButton;
-        private Label label1;
+        private Label lblImagePath;
         private TrackBar tbImage;
         private Label lblFrequency;
         private TrackBar tbFrequency;

@@ -93,24 +93,45 @@ namespace WebcamImageCapture
             DeleteAllButton.Enabled = true;
         }
 
-        void OnNewImage(object sender, StandardMessage m)   //must have this signature except for method name
+        void OnNewImage(object sender, StandardMessage m)
         {
             try
             {
-                EventData eventData = m.Value as EventData;  //you need this to extract the EventData object
+                EventData eventData = m.Value as EventData;
 
-                if (fileList is not null && fileList.Count > 0 && eventData is not null && !string.IsNullOrEmpty(eventData.Data.ToString()))
+                if (eventData != null && !string.IsNullOrEmpty(eventData.Data?.ToString()))
                 {
+                    // Add to fileList safely (fileList itself is not a UI control, so this is fine)
                     fileList.Add(eventData.Data.ToString());
-                    this.Invoke((MethodInvoker)(() =>
+
+                    // Marshal ALL UI updates to the UI thread
+                    if (this.InvokeRequired)
                     {
+                        this.Invoke((MethodInvoker)(() =>
+                        {
+                            tbImage.Maximum = fileList.Count - 1;
+                            if (cbAuto.Checked)
+                            {
+                                tbImage.Value = tbImage.Maximum;
+                                model.ImageLocation = fileList[tbImage.Maximum];
+                                lblImagePath.Text = fileList[tbImage.Maximum];
+                            }
+                        }));
+                    }
+                    else
+                    {
+                        // Already on UI thread
                         tbImage.Maximum = fileList.Count - 1;
                         if (cbAuto.Checked)
                         {
                             tbImage.Value = tbImage.Maximum;
                             model.ImageLocation = fileList[tbImage.Value];
                         }
-                    }));
+                    }
+                }
+                else
+                {
+                    GetImages();
                 }
             }
             catch (Exception ex)
@@ -155,7 +176,7 @@ namespace WebcamImageCapture
             if (fileList.Count > 0 && tbImage.Value < fileList.Count - 1)
             {
                 model.ImageLocation = fileList[tbImage.Value];
-                label1.Text = fileList[tbImage.Value];
+                lblImagePath.Text = fileList[tbImage.Value];
             }
         }
 
@@ -202,6 +223,8 @@ namespace WebcamImageCapture
                     }
                     MessageBox.Show("All Files Deleted", "Info");
                     Reset();
+                    pictureBox1.ImageLocation = null;
+                    lblImagePath.Text = "";
                     GetImages();
                 }
                 else
