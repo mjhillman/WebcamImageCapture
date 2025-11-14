@@ -103,7 +103,7 @@
             // cbResolution
             // 
             cbResolution.FormattingEnabled = true;
-            cbResolution.Items.AddRange(new object[] { "", "QVGA\t320 × 240", "VGA\t640 × 480", "SVGA\t800 × 600", "XGA\t1024 × 768", "HD\t1280 × 720", "Full HD \t1920 × 1080", "", "QHD \t2560 × 1440", "4K UHD\t3840 × 2160" });
+            cbResolution.Items.AddRange(new object[] { "", "QVGA\t320 × 240", "VGA\t640 × 480", "SVGA\t800 × 600", "XGA\t1024 × 768", "HD\t1280 × 720", "Full HD \t1920 × 1080", "QHD \t2560 × 1440", "4K UHD\t3840 × 2160" });
             cbResolution.Location = new Point(100, 55);
             cbResolution.Name = "cbResolution";
             cbResolution.Size = new Size(218, 25);
@@ -134,6 +134,7 @@
             tbPath.Name = "tbPath";
             tbPath.Size = new Size(294, 25);
             tbPath.TabIndex = 18;
+            tbPath.Validating += tbPath_Validating;
             // 
             // cbAuto
             // 

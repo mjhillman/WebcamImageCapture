@@ -1,4 +1,5 @@
 using HITS.LIB.WeakEvents;
+using System.IO;
 
 namespace WebcamImageCapture
 {
@@ -102,7 +103,7 @@ namespace WebcamImageCapture
             {
                 Reset();
 
-                fileList = Directory.GetFiles(Program.CAPTURE_DIRECTORY).ToList<string>();
+                fileList = Directory.GetFiles(Properties.Settings.Default.CapturePath).ToList<string>();
 
                 if (fileList.Count > 0)
                 {
@@ -156,11 +157,9 @@ namespace WebcamImageCapture
         {
             try
             {
-                var path = Program.CAPTURE_DIRECTORY;
-
-                if (Directory.Exists(path))
+                if (Directory.Exists(Properties.Settings.Default.CapturePath))
                 {
-                    foreach (var file in Directory.GetFiles(path))
+                    foreach (var file in Directory.GetFiles(Properties.Settings.Default.CapturePath))
                     {
                         try
                         {
@@ -199,7 +198,12 @@ namespace WebcamImageCapture
                 if (rbWebcam1.Checked) webcamIndex = 1;
                 else if (rbWebcam2.Checked) webcamIndex = 2;
                 this.Cursor = Cursors.WaitCursor;
-                captureService.StartAsync(CancellationToken.None, webcamIndex, tbFrequency.Value, Properties.Settings.Default.CaptureWidth, Properties.Settings.Default.CaptureHeight);
+                captureService.StartAsync(CancellationToken.None,
+                                        webcamIndex,
+                                        tbFrequency.Value,
+                                        Properties.Settings.Default.CaptureWidth,
+                                        Properties.Settings.Default.CaptureHeight,
+                                        Properties.Settings.Default.CapturePath);
                 GetImages();
                 this.Cursor = Cursors.Default;
             }
@@ -237,38 +241,47 @@ namespace WebcamImageCapture
                         Properties.Settings.Default.CaptureHeight = 480;
                         break;
                     case 2:
+                        Properties.Settings.Default.CaptureWidth = 800;
+                        Properties.Settings.Default.CaptureHeight = 600;
+                        break;
+                    case 3:
                         Properties.Settings.Default.CaptureWidth = 1024;
                         Properties.Settings.Default.CaptureHeight = 768;
                         break;
-                    case 3:
+                    case 4:
                         Properties.Settings.Default.CaptureWidth = 1280;
                         Properties.Settings.Default.CaptureHeight = 720;
                         break;
-                    case 4:
+                    case 5:
                         Properties.Settings.Default.CaptureWidth = 1920;
                         Properties.Settings.Default.CaptureHeight = 1080;
                         break;
-                    case 5:
+                    case 6:
+                        Properties.Settings.Default.CaptureWidth = 2560;
+                        Properties.Settings.Default.CaptureHeight = 1440;
+                        break;
+                    case 7:
                         Properties.Settings.Default.CaptureWidth = 3840;
                         Properties.Settings.Default.CaptureHeight = 2160;
                         break;
-                    case 6:
-                        Properties.Settings.Default.CaptureWidth = 4096;
-                        Properties.Settings.Default.CaptureHeight = 2160;
-                        break;
-                    case 7:
-                        Properties.Settings.Default.CaptureWidth = 7680;
-                        Properties.Settings.Default.CaptureHeight = 4320;
-                        break;
-                    case 8:
-                        Properties.Settings.Default.CaptureWidth = 8192;
-                        Properties.Settings.Default.CaptureHeight = 4320;
-                        break;
                     default:
-                        Properties.Settings.Default.CaptureWidth = 1024;
-                        Properties.Settings.Default.CaptureHeight = 768;
+                        Properties.Settings.Default.CaptureWidth = 800;
+                        Properties.Settings.Default.CaptureHeight = 600;
                         break;
                 }
+            }
+        }
+
+        private void tbPath_Validating(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (Directory.Exists(tbPath.Text))
+            {
+                Properties.Settings.Default.CapturePath = tbPath.Text;
+            }
+            else
+            {
+                e.Cancel = true;
+                MessageBox.Show("Directory does not exist", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
     }

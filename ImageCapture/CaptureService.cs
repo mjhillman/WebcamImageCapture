@@ -9,14 +9,16 @@ namespace WebcamImageCapture
         private System.Timers.Timer _timer;
         private VideoCapture _capture;
         private EventMgr mgr = new EventMgr();
+        private string _capturePath;
 
         public CaptureService()
         {
             
         }
 
-        public Task StartAsync(CancellationToken cancellationToken, int webcamIndex, int frequency, int width, int height)
+        public Task StartAsync(CancellationToken cancellationToken, int webcamIndex, int frequency, int width, int height, string path)
         {
+            _capturePath = path;
             _capture = new VideoCapture(webcamIndex); // 0=default webcam 1=external webcam
             _capture.Set(VideoCaptureProperties.FrameWidth, width);
             _capture.Set(VideoCaptureProperties.FrameHeight, height);
@@ -34,7 +36,7 @@ namespace WebcamImageCapture
                 if (!frame.Empty())
                 {
                     string d = DateTime.Now.ToString("yyyy.MM.dd_HH.mm.ss");
-                    var filename = $"{Program.CAPTURE_DIRECTORY}\\{d}.jpg";
+                    var filename = $"{_capturePath}\\{d}.jpg";
                     Cv2.ImWrite(filename, frame);
                     mgr.PublishEvent(new EventData
                     {
