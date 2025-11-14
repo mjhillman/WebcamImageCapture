@@ -1,0 +1,275 @@
+using HITS.LIB.WeakEvents;
+
+namespace WebcamImageCapture
+{
+    public partial class Form1 : Form
+    {
+        private List<string> fileList;
+        private ImageViewModel model = new ImageViewModel();
+        private CaptureService captureService = new();
+        EventMgr mgr = new EventMgr();
+
+        public Form1()
+        {
+            try
+            {
+                InitializeComponent();
+                pictureBox1.DataBindings.Add("ImageLocation", model, "ImageLocation", true, DataSourceUpdateMode.OnPropertyChanged);
+                tbImage.DataBindings.Add("Value", model, "Value", true, DataSourceUpdateMode.OnPropertyChanged);
+                GetImages();
+                mgr.SubscribeToEvent(this, OnNewImage);
+                tbFrequency.Value = 3;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            cbAuto.Checked = Properties.Settings.Default.AutoShowLast;
+            tbPath.Text = Properties.Settings.Default.CapturePath;
+            tbFrequency.Value = Properties.Settings.Default.SnapshotFrequency;
+            lblFrequency.Text = $"Snapshot Frequency {tbFrequency.Value} seconds";
+            if (Properties.Settings.Default.WebcamIndex == 0)
+            {
+                rbWebcam0.Checked = true;
+            }
+            else if (Properties.Settings.Default.WebcamIndex == 1)
+            {
+                rbWebcam1.Checked = true;
+            }
+            else if (Properties.Settings.Default.WebcamIndex == 2)
+            {
+                rbWebcam2.Checked = true;
+            }
+            cbResolution.SelectedIndex = Properties.Settings.Default.ResolutionIndex;
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            captureService?.Dispose();
+            int webcamIndex = 0;
+            if (rbWebcam1.Checked) webcamIndex = 1;
+            else if (rbWebcam2.Checked) webcamIndex = 2;
+
+            Properties.Settings.Default.AutoShowLast = cbAuto.Checked;
+            Properties.Settings.Default.CapturePath = tbPath.Text;
+            Properties.Settings.Default.SnapshotFrequency = tbFrequency.Value;
+            Properties.Settings.Default.WebcamIndex = webcamIndex;
+            Properties.Settings.Default.ResolutionIndex = cbResolution.SelectedIndex;
+            Properties.Settings.Default.Save();
+        }
+
+        void OnNewImage(object sender, StandardMessage m)   //must have this signature except for method name
+        {
+            try
+            {
+                EventData eventData = m.Value as EventData;  //you need this to extract the EventData object
+
+                if (fileList is not null && fileList.Count > 0 && eventData is not null && !string.IsNullOrEmpty(eventData.Data.ToString()))
+                {
+                    fileList.Add(eventData.Data.ToString());
+                    this.Invoke((MethodInvoker)(() =>
+                    {
+                        tbImage.Maximum = fileList.Count - 1;
+                        if (cbAuto.Checked)
+                        {
+                            tbImage.Value = tbImage.Maximum;
+                            model.ImageLocation = fileList[tbImage.Value];
+                        }
+                    }));
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void Reset()
+        {
+            tbImage.Minimum = 0;
+            tbImage.Maximum = 0;
+            tbImage.Value = 0;
+            fileList?.Clear();
+        }
+
+        private void GetImages()
+        {
+            try
+            {
+                Reset();
+
+                fileList = Directory.GetFiles(Program.CAPTURE_DIRECTORY).ToList<string>();
+
+                if (fileList.Count > 0)
+                {
+                    tbImage.Minimum = 0;
+                    tbImage.Maximum = fileList.Count - 1;
+                    tbImage.Value = tbImage.Maximum;
+                    model.ImageLocation = fileList[tbImage.Value];
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+        }
+
+        private void trackBar1_ValueChanged(object sender, EventArgs e)
+        {
+            if (fileList.Count > 0 && tbImage.Value < fileList.Count - 1)
+            {
+                model.ImageLocation = fileList[tbImage.Value];
+                label1.Text = fileList[tbImage.Value];
+            }
+        }
+
+        private void NextButton_Click(object sender, EventArgs e)
+        {
+            if (model.Value < tbImage.Maximum && tbImage.Value < fileList.Count - 1)
+            {
+                tbImage.Value++;
+                model.ImageLocation = fileList[tbImage.Value];
+            }
+        }
+
+        private void PreviousButton_Click(object sender, EventArgs e)
+        {
+            if (model.Value > tbImage.Minimum)
+            {
+                tbImage.Value--;
+                model.ImageLocation = fileList[tbImage.Value];
+            }
+
+        }
+
+        private void ReloadButton_Click(object sender, EventArgs e)
+        {
+            GetImages();
+        }
+
+        private void DeleteAllButton_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var path = Program.CAPTURE_DIRECTORY;
+
+                if (Directory.Exists(path))
+                {
+                    foreach (var file in Directory.GetFiles(path))
+                    {
+                        try
+                        {
+                            File.Delete(file);
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show(ex.Message, "Error");
+                        }
+                    }
+                    MessageBox.Show("All Files Deleted", "Info");
+                    Reset();
+                    GetImages();
+                }
+                else
+                {
+                    throw new Exception("Capture directory does not exist");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void tbFrequency_ValueChanged(object sender, EventArgs e)
+        {
+            lblFrequency.Text = $"Snapshot Frequency {tbFrequency.Value} seconds";
+        }
+
+        private void butStartService_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                int webcamIndex = 0;
+                if (rbWebcam1.Checked) webcamIndex = 1;
+                else if (rbWebcam2.Checked) webcamIndex = 2;
+                this.Cursor = Cursors.WaitCursor;
+                captureService.StartAsync(CancellationToken.None, webcamIndex, tbFrequency.Value, Properties.Settings.Default.CaptureWidth, Properties.Settings.Default.CaptureHeight);
+                GetImages();
+                this.Cursor = Cursors.Default;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void butStopService_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                this.Cursor = Cursors.WaitCursor;
+                captureService.StopAsync(new CancellationToken());
+                this.Cursor = Cursors.Default;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void cbResolution_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            {
+                switch (cbResolution.SelectedIndex)
+                {
+                    case 0:
+                        Properties.Settings.Default.CaptureWidth = 320;
+                        Properties.Settings.Default.CaptureHeight = 240;
+                        break;
+                    case 1:
+                        Properties.Settings.Default.CaptureWidth = 640;
+                        Properties.Settings.Default.CaptureHeight = 480;
+                        break;
+                    case 2:
+                        Properties.Settings.Default.CaptureWidth = 1024;
+                        Properties.Settings.Default.CaptureHeight = 768;
+                        break;
+                    case 3:
+                        Properties.Settings.Default.CaptureWidth = 1280;
+                        Properties.Settings.Default.CaptureHeight = 720;
+                        break;
+                    case 4:
+                        Properties.Settings.Default.CaptureWidth = 1920;
+                        Properties.Settings.Default.CaptureHeight = 1080;
+                        break;
+                    case 5:
+                        Properties.Settings.Default.CaptureWidth = 3840;
+                        Properties.Settings.Default.CaptureHeight = 2160;
+                        break;
+                    case 6:
+                        Properties.Settings.Default.CaptureWidth = 4096;
+                        Properties.Settings.Default.CaptureHeight = 2160;
+                        break;
+                    case 7:
+                        Properties.Settings.Default.CaptureWidth = 7680;
+                        Properties.Settings.Default.CaptureHeight = 4320;
+                        break;
+                    case 8:
+                        Properties.Settings.Default.CaptureWidth = 8192;
+                        Properties.Settings.Default.CaptureHeight = 4320;
+                        break;
+                    default:
+                        Properties.Settings.Default.CaptureWidth = 1024;
+                        Properties.Settings.Default.CaptureHeight = 768;
+                        break;
+                }
+            }
+        }
+    }
+}

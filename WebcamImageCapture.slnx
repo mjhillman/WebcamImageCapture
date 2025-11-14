@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="HITS.LIB.WeakEvents/HITS.LIB.WeakEvents.csproj" />
+  <Project Path="ImageCapture/WebcamImageCapture.csproj" />
+</Solution>
