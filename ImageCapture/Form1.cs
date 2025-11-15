@@ -78,6 +78,8 @@ namespace WebcamImageCapture
             tbPath.Enabled = false;
             tbImage.Enabled = true;
             DeleteAllButton.Enabled = false;
+            PreviousButton.Enabled = true;
+            NextButton.Enabled = true;
         }
 
         private void ServiceStopped()
@@ -91,8 +93,10 @@ namespace WebcamImageCapture
             butStopService.Enabled = false;
             butStartService.Enabled = true;
             tbPath.Enabled = true;
-            tbImage.Enabled = false;
+            tbImage.Enabled = true;
             DeleteAllButton.Enabled = true;
+            PreviousButton.Enabled = true;
+            NextButton.Enabled = true;
         }
 
         void OnNewImage(object sender, StandardMessage m)
