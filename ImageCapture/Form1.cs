@@ -7,7 +7,7 @@ namespace WebcamImageCapture
         private List<string> fileList;
         private ImageViewModel model = new ImageViewModel();
         private CaptureService captureService = new();
-        EventMgr mgr = new EventMgr();
+        EventMgr eventMgr = new EventMgr();
 
         public Form1()
         {
@@ -17,7 +17,7 @@ namespace WebcamImageCapture
                 pictureBox1.DataBindings.Add("ImageLocation", model, "ImageLocation", true, DataSourceUpdateMode.OnPropertyChanged);
                 tbImage.DataBindings.Add("Value", model, "Value", true, DataSourceUpdateMode.OnPropertyChanged);
                 GetImages();
-                mgr.SubscribeToEvent(this, OnNewImage);
+                eventMgr.SubscribeToEvent(this, OnNewImage);
                 tbFrequency.Value = 3;
             }
             catch (Exception ex)
@@ -50,6 +50,8 @@ namespace WebcamImageCapture
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
+            eventMgr.UnsubscribeAll(this);
+            captureService?.StopAsync(new CancellationToken());
             captureService?.Dispose();
             int webcamIndex = 0;
             if (rbWebcam1.Checked) webcamIndex = 1;
@@ -101,14 +103,12 @@ namespace WebcamImageCapture
 
                 if (eventData != null && !string.IsNullOrEmpty(eventData.Data?.ToString()))
                 {
-                    // Add to fileList safely (fileList itself is not a UI control, so this is fine)
-                    fileList.Add(eventData.Data.ToString());
-
                     // Marshal ALL UI updates to the UI thread
                     if (this.InvokeRequired)
                     {
                         this.Invoke((MethodInvoker)(() =>
                         {
+                            fileList.Add(eventData.Data.ToString());
                             tbImage.Maximum = fileList.Count - 1;
                             if (cbAuto.Checked)
                             {
@@ -121,11 +121,13 @@ namespace WebcamImageCapture
                     else
                     {
                         // Already on UI thread
+                        fileList.Add(eventData.Data.ToString());
                         tbImage.Maximum = fileList.Count - 1;
                         if (cbAuto.Checked)
                         {
                             tbImage.Value = tbImage.Maximum;
                             model.ImageLocation = fileList[tbImage.Value];
+                            lblImagePath.Text = fileList[tbImage.Maximum];
                         }
                     }
                 }

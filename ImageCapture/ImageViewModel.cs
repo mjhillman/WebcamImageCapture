@@ -9,5 +9,6 @@ namespace WebcamImageCapture
         public ImageViewModel() { }
         public string ImageLocation {  get; set; }
         public int Value { get; set; }
+        public int ImageIndex { get; set; }
     }
 }
