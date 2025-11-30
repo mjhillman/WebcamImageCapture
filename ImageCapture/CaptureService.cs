@@ -7,17 +7,32 @@ namespace WebcamImageCapture
     internal sealed class CaptureService : IDisposable
     {
         private System.Timers.Timer _timer;
+        private System.Timers.Timer _timer2 = null;
         private VideoCapture _capture;
-        private EventMgr mgr = new EventMgr();
         private string _capturePath;
+        private long _lastDirSize = 0;
+
+        //events
+        private EventMgr mgr = new EventMgr();
+        internal const long MAX_DIR_SIZE = 5000000000;
+        internal const string FRAME_CAPTURED = "FRAME_CAPTURED";
+        internal const string MAX__DIR_SIZE_EXCEEDED = "MAX__DIR_SIZE_EXCEEDED";
+
 
         public CaptureService()
         {
-            
         }
 
         public Task StartAsync(CancellationToken cancellationToken, int webcamIndex, int frequency, int width, int height, string path)
         {
+            if (_timer2 == null)
+            {
+                _timer2 = new System.Timers.Timer(1 * 60 * 1000);
+                _timer2.Elapsed += CaptureDirSize;
+                _timer2.AutoReset = true;   // Keep repeating
+                _timer2.Enabled = true;     // Start the timer
+            }
+
             _capture?.Dispose();
             _timer?.Dispose();
             _capturePath = path;
@@ -43,13 +58,29 @@ namespace WebcamImageCapture
                     mgr.PublishEvent(new EventData
                     {
                         Sender = this,
-                        Args = null,
+                        Args = _lastDirSize,
                         Data = filename,
-                        Token = "CaptureService"
+                        Token = FRAME_CAPTURED
                     });
                 }
             }
         }
+
+        private void CaptureDirSize(object sender, ElapsedEventArgs e)
+        {
+            _lastDirSize = GetDirectorySize(_capturePath);
+            if (_lastDirSize > MAX_DIR_SIZE)
+            {
+                mgr.PublishEvent(new EventData
+                {
+                    Sender = this,
+                    Args = null,
+                    Data = _lastDirSize,
+                    Token = MAX__DIR_SIZE_EXCEEDED
+                });
+            }
+        }
+
 
         /// <summary>
         /// 
@@ -75,15 +106,46 @@ namespace WebcamImageCapture
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
+            _timer2?.Stop();
+            _timer2?.Dispose();
+            _timer2 = null;
+
             _timer?.Stop();
             _capture?.Release();
             _timer?.Elapsed -= CaptureFrame;
             return Task.CompletedTask;
         }
 
+        private long GetDirectorySize(string path)
+        {
+            long size = 0;
+            try
+            {
+                // Add file sizes.
+                foreach (var filePath in Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories))
+                {
+                    try
+                    {
+                        var file = new FileInfo(filePath);
+                        size += file.Length;
+                    }
+                    catch (Exception)
+                    {
+                        // Ignore files that can't be accessed and continue
+                    }
+                }
+
+                return size;
+            }
+            catch (Exception)
+            {
+                return 0;
+            }
+        }
         public void Dispose()
         {
             _timer?.Dispose();
+            _timer2?.Dispose();
             _capture?.Dispose();
         }
     }

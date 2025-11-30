@@ -47,6 +47,7 @@
             PreviousButton = new Button();
             NextButton = new Button();
             tbImage = new TrackBar();
+            lblDirSize = new Label();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)splitContainer1).BeginInit();
             splitContainer1.Panel1.SuspendLayout();
@@ -75,6 +76,7 @@
             // 
             // splitContainer1.Panel1
             // 
+            splitContainer1.Panel1.Controls.Add(lblDirSize);
             splitContainer1.Panel1.Controls.Add(cbResolution);
             splitContainer1.Panel1.Controls.Add(label2);
             splitContainer1.Panel1.Controls.Add(lblPath);
@@ -148,9 +150,9 @@
             // 
             // butStopService
             // 
-            butStopService.Location = new Point(982, 15);
+            butStopService.Location = new Point(981, 9);
             butStopService.Name = "butStopService";
-            butStopService.Size = new Size(112, 25);
+            butStopService.Size = new Size(112, 30);
             butStopService.TabIndex = 16;
             butStopService.Text = "Stop Snapshots";
             butStopService.UseVisualStyleBackColor = true;
@@ -268,6 +270,15 @@
             tbImage.TabIndex = 0;
             tbImage.ValueChanged += trackBar1_ValueChanged;
             // 
+            // lblDirSize
+            // 
+            lblDirSize.AutoSize = true;
+            lblDirSize.Location = new Point(854, 78);
+            lblDirSize.Name = "lblDirSize";
+            lblDirSize.Size = new Size(43, 17);
+            lblDirSize.TabIndex = 23;
+            lblDirSize.Text = "label1";
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
@@ -313,5 +324,6 @@
         private Label lblPath;
         private ComboBox cbResolution;
         private Label label2;
+        private Label lblDirSize;
     }
 }

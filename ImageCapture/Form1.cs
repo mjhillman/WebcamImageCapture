@@ -1,4 +1,5 @@
 using HITS.LIB.WeakEvents;
+using System.Diagnostics.Eventing.Reader;
 
 namespace WebcamImageCapture
 {
@@ -17,7 +18,7 @@ namespace WebcamImageCapture
                 pictureBox1.DataBindings.Add("ImageLocation", model, "ImageLocation", true, DataSourceUpdateMode.OnPropertyChanged);
                 tbImage.DataBindings.Add("Value", model, "Value", true, DataSourceUpdateMode.OnPropertyChanged);
                 GetImages();
-                eventMgr.SubscribeToEvent(this, OnNewImage);
+                eventMgr.SubscribeToEvent(this, OnWeakEvent);
                 tbFrequency.Value = 3;
             }
             catch (Exception ex)
@@ -67,36 +68,82 @@ namespace WebcamImageCapture
 
         private void ServiceRunning()
         {
-            rbWebcam0.Enabled = false;
-            rbWebcam1.Enabled = false;
-            rbWebcam2.Enabled = false;
-            cbResolution.Enabled = false;
-            tbFrequency.Enabled = false;
-            cbAuto.Enabled = true;
-            butStopService.Enabled = true;
-            butStartService.Enabled = false;
-            tbPath.Enabled = false;
-            tbImage.Enabled = true;
-            DeleteAllButton.Enabled = false;
-            PreviousButton.Enabled = true;
-            NextButton.Enabled = true;
+            SafeInvoke(() =>
+            {
+                rbWebcam0.Enabled = false;
+                rbWebcam1.Enabled = false;
+                rbWebcam2.Enabled = false;
+                cbResolution.Enabled = false;
+                tbFrequency.Enabled = false;
+                cbAuto.Enabled = true;
+                butStopService.Enabled = true;
+                butStartService.Enabled = false;
+                tbPath.Enabled = false;
+                tbImage.Enabled = true;
+                DeleteAllButton.Enabled = false;
+                PreviousButton.Enabled = true;
+                NextButton.Enabled = true;
+            });
         }
 
         private void ServiceStopped()
         {
-            rbWebcam0.Enabled = true;
-            rbWebcam1.Enabled = true;
-            rbWebcam2.Enabled = true;
-            cbResolution.Enabled = true;
-            tbFrequency.Enabled = true;
-            cbAuto.Enabled = true;
-            butStopService.Enabled = false;
-            butStartService.Enabled = true;
-            tbPath.Enabled = true;
-            tbImage.Enabled = true;
-            DeleteAllButton.Enabled = true;
-            PreviousButton.Enabled = true;
-            NextButton.Enabled = true;
+            SafeInvoke(() =>
+            {
+                rbWebcam0.Enabled = true;
+                rbWebcam1.Enabled = true;
+                rbWebcam2.Enabled = true;
+                cbResolution.Enabled = true;
+                tbFrequency.Enabled = true;
+                cbAuto.Enabled = true;
+                butStopService.Enabled = false;
+                butStartService.Enabled = true;
+                tbPath.Enabled = true;
+                tbImage.Enabled = true;
+                DeleteAllButton.Enabled = true;
+                PreviousButton.Enabled = true;
+                NextButton.Enabled = true;
+            });
+        }
+
+        void OnWeakEvent(object sender, StandardMessage m)
+        {
+            try
+            {
+                EventData eventData = m.Value as EventData;
+                if (eventData.Token == CaptureService.FRAME_CAPTURED)
+                {
+                    OnNewImage(sender, m);
+                }
+                else if (eventData.Token == CaptureService.MAX__DIR_SIZE_EXCEEDED)
+                {
+                    OnMaxDirSizeExceeded(sender, m);
+                }
+            }
+            catch (Exception ex)
+            {
+                SafeInvoke(() => MessageBox.Show(ex.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error));
+            }
+        }   
+
+        void OnMaxDirSizeExceeded(object sender, StandardMessage m)
+        {
+            try
+            {
+                EventData eventData = m.Value as EventData;
+                if (eventData.Token == CaptureService.MAX__DIR_SIZE_EXCEEDED)
+                {
+                    butStopService_Click(this, EventArgs.Empty);
+                    SafeInvoke(() =>
+    MessageBox.Show($"Capture directory size has exceeded the maximum limit ({CaptureService.MAX_DIR_SIZE:G}). Please delete some files.",
+                    "Directory Size Exceeded", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+);
+                }
+            }
+            catch (Exception ex)
+            {
+                SafeInvoke(() => MessageBox.Show(ex.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error));
+            }
         }
 
         void OnNewImage(object sender, StandardMessage m)
@@ -119,6 +166,7 @@ namespace WebcamImageCapture
                                 tbImage.Value = tbImage.Maximum;
                                 model.ImageLocation = fileList[tbImage.Maximum];
                                 lblImagePath.Text = fileList[tbImage.Maximum];
+                                lblDirSize.Text = $"{eventData.Args:#,0} bytes";
                             }
                         }));
                     }
@@ -132,6 +180,7 @@ namespace WebcamImageCapture
                             tbImage.Value = tbImage.Maximum;
                             model.ImageLocation = fileList[tbImage.Value];
                             lblImagePath.Text = fileList[tbImage.Maximum];
+                            lblDirSize.Text = $"{eventData.Args:#,0} bytes";
                         }
                     }
                 }
@@ -142,7 +191,7 @@ namespace WebcamImageCapture
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SafeInvoke(() => MessageBox.Show(ex.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error));
             }
         }
 
@@ -172,7 +221,7 @@ namespace WebcamImageCapture
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SafeInvoke(() => MessageBox.Show(ex.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error));
             }
 
         }
@@ -240,7 +289,7 @@ namespace WebcamImageCapture
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SafeInvoke(() => MessageBox.Show(ex.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error));
             }
         }
 
@@ -269,7 +318,7 @@ namespace WebcamImageCapture
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SafeInvoke(() => MessageBox.Show(ex.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error));
                 ServiceStopped();
             }
         }
@@ -278,14 +327,14 @@ namespace WebcamImageCapture
         {
             try
             {
-                this.Cursor = Cursors.WaitCursor;
+                SafeInvoke(() => this.Cursor = Cursors.WaitCursor);
                 captureService.StopAsync(new CancellationToken());
                 ServiceStopped();
-                this.Cursor = Cursors.Default;
+                SafeInvoke(() => this.Cursor = Cursors.Default);
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SafeInvoke(() => MessageBox.Show(ex.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error));
                 ServiceStopped();
             }
         }
@@ -344,7 +393,25 @@ namespace WebcamImageCapture
             else
             {
                 e.Cancel = true;
-                MessageBox.Show("Directory does not exist", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SafeInvoke(() => MessageBox.Show("Directory does not exist", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error));
+                
+            }
+        }
+
+        private void SafeInvoke(Action action)
+        {
+            if (this.IsDisposed || !this.IsHandleCreated)
+            {
+                return;
+            }
+
+            if (this.InvokeRequired)
+            {
+                this.BeginInvoke(action);
+            }
+            else
+            {
+                action();
             }
         }
     }
