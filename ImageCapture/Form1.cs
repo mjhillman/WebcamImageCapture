@@ -9,6 +9,7 @@ namespace WebcamImageCapture
         private ImageViewModel model = new ImageViewModel();
         private CaptureService captureService = new();
         EventMgr eventMgr = new EventMgr();
+        private const long MEGABYTE = 1048576;
 
         public Form1()
         {
@@ -46,6 +47,8 @@ namespace WebcamImageCapture
                 rbWebcam2.Checked = true;
             }
             cbResolution.SelectedIndex = Properties.Settings.Default.ResolutionIndex;
+            nudDiskLimit.Value = Properties.Settings.Default.DiskLimit / MEGABYTE;
+            lblDirSize.Text = (CaptureService.GetDirectorySize(Properties.Settings.Default.CapturePath) / MEGABYTE).ToString("G") + " MB";
             ServiceStopped();
         }
 
@@ -63,6 +66,7 @@ namespace WebcamImageCapture
             Properties.Settings.Default.SnapshotFrequency = tbFrequency.Value;
             Properties.Settings.Default.WebcamIndex = webcamIndex;
             Properties.Settings.Default.ResolutionIndex = cbResolution.SelectedIndex;
+            Properties.Settings.Default.DiskLimit = (long)nudDiskLimit.Value * MEGABYTE;
             Properties.Settings.Default.Save();
         }
 
@@ -83,6 +87,7 @@ namespace WebcamImageCapture
                 DeleteAllButton.Enabled = false;
                 PreviousButton.Enabled = true;
                 NextButton.Enabled = true;
+                nudDiskLimit.Enabled = false;
             });
         }
 
@@ -103,6 +108,7 @@ namespace WebcamImageCapture
                 DeleteAllButton.Enabled = true;
                 PreviousButton.Enabled = true;
                 NextButton.Enabled = true;
+                nudDiskLimit.Enabled = true;
             });
         }
 
@@ -135,9 +141,9 @@ namespace WebcamImageCapture
                 {
                     butStopService_Click(this, EventArgs.Empty);
                     SafeInvoke(() =>
-    MessageBox.Show($"Capture directory size has exceeded the maximum limit ({CaptureService.MAX_DIR_SIZE:G}). Please delete some files.",
-                    "Directory Size Exceeded", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-);
+                        MessageBox.Show($"Capture directory size has exceeded the maximum limit ({this.nudDiskLimit.Value:G} MB). Please delete some files.",
+                        "Directory Size Exceeded", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                    );
                 }
             }
             catch (Exception ex)
@@ -166,7 +172,8 @@ namespace WebcamImageCapture
                                 tbImage.Value = tbImage.Maximum;
                                 model.ImageLocation = fileList[tbImage.Maximum];
                                 lblImagePath.Text = fileList[tbImage.Maximum];
-                                lblDirSize.Text = $"{eventData.Args:#,0} bytes";
+                                long mbs = (long)eventData.Args / MEGABYTE;
+                                lblDirSize.Text = $"{mbs:#,0} MB";
                             }
                         }));
                     }
@@ -306,15 +313,16 @@ namespace WebcamImageCapture
                 int webcamIndex = 0;
                 if (rbWebcam1.Checked) webcamIndex = 1;
                 else if (rbWebcam2.Checked) webcamIndex = 2;
-                this.Cursor = Cursors.WaitCursor;
+                SafeInvoke(() => this.Cursor = Cursors.WaitCursor);
                 captureService.StartAsync(CancellationToken.None,
                                         webcamIndex,
                                         tbFrequency.Value,
                                         Properties.Settings.Default.CaptureWidth,
                                         Properties.Settings.Default.CaptureHeight,
-                                        Properties.Settings.Default.CapturePath);
+                                        Properties.Settings.Default.CapturePath,
+                                        Properties.Settings.Default.DiskLimit);
                 GetImages();
-                this.Cursor = Cursors.Default;
+                SafeInvoke(() => this.Cursor = Cursors.Default);
             }
             catch (Exception ex)
             {

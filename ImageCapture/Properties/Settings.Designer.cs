@@ -106,5 +106,17 @@ namespace WebcamImageCapture.Properties {
                 this["ResolutionIndex"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("300")]
+        public long DiskLimit {
+            get {
+                return ((long)(this["DiskLimit"]));
+            }
+            set {
+                this["DiskLimit"] = value;
+            }
+        }
     }
 }

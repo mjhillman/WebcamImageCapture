@@ -14,7 +14,7 @@ namespace WebcamImageCapture
 
         //events
         private EventMgr mgr = new EventMgr();
-        internal const long MAX_DIR_SIZE = 5000000000;
+        internal long _diskLimit = 5000000000;
         internal const string FRAME_CAPTURED = "FRAME_CAPTURED";
         internal const string MAX__DIR_SIZE_EXCEEDED = "MAX__DIR_SIZE_EXCEEDED";
 
@@ -23,10 +23,11 @@ namespace WebcamImageCapture
         {
         }
 
-        public Task StartAsync(CancellationToken cancellationToken, int webcamIndex, int frequency, int width, int height, string path)
+        public Task StartAsync(CancellationToken cancellationToken, int webcamIndex, int frequency, int width, int height, string path, long diskLimit)
         {
             if (_timer2 == null)
             {
+                _diskLimit = diskLimit;
                 _timer2 = new System.Timers.Timer(1 * 60 * 1000);
                 _timer2.Elapsed += CaptureDirSize;
                 _timer2.AutoReset = true;   // Keep repeating
@@ -55,6 +56,12 @@ namespace WebcamImageCapture
                     string d = DateTime.Now.ToString("yyyy.MM.dd_HH.mm.ss");
                     var filename = $"{_capturePath}\\{d}.jpg";
                     Cv2.ImWrite(filename, frame);
+
+                    if (_lastDirSize == 0)
+                    {
+                        _lastDirSize = GetDirectorySize(_capturePath);
+                    };
+
                     mgr.PublishEvent(new EventData
                     {
                         Sender = this,
@@ -69,7 +76,7 @@ namespace WebcamImageCapture
         private void CaptureDirSize(object sender, ElapsedEventArgs e)
         {
             _lastDirSize = GetDirectorySize(_capturePath);
-            if (_lastDirSize > MAX_DIR_SIZE)
+            if (_lastDirSize > _diskLimit)
             {
                 mgr.PublishEvent(new EventData
                 {
@@ -116,7 +123,7 @@ namespace WebcamImageCapture
             return Task.CompletedTask;
         }
 
-        private long GetDirectorySize(string path)
+        public static long GetDirectorySize(string path)
         {
             long size = 0;
             try

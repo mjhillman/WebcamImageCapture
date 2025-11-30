@@ -30,6 +30,10 @@
         {
             pictureBox1 = new PictureBox();
             splitContainer1 = new SplitContainer();
+            nudDiskLimit = new NumericUpDown();
+            label3 = new Label();
+            label1 = new Label();
+            lblDirSize = new Label();
             cbResolution = new ComboBox();
             label2 = new Label();
             lblPath = new Label();
@@ -47,12 +51,12 @@
             PreviousButton = new Button();
             NextButton = new Button();
             tbImage = new TrackBar();
-            lblDirSize = new Label();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)splitContainer1).BeginInit();
             splitContainer1.Panel1.SuspendLayout();
             splitContainer1.Panel2.SuspendLayout();
             splitContainer1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)nudDiskLimit).BeginInit();
             ((System.ComponentModel.ISupportInitialize)tbFrequency).BeginInit();
             ((System.ComponentModel.ISupportInitialize)tbImage).BeginInit();
             SuspendLayout();
@@ -62,7 +66,7 @@
             pictureBox1.Dock = DockStyle.Fill;
             pictureBox1.Location = new Point(0, 0);
             pictureBox1.Name = "pictureBox1";
-            pictureBox1.Size = new Size(1267, 668);
+            pictureBox1.Size = new Size(1267, 652);
             pictureBox1.SizeMode = PictureBoxSizeMode.CenterImage;
             pictureBox1.TabIndex = 0;
             pictureBox1.TabStop = false;
@@ -76,6 +80,9 @@
             // 
             // splitContainer1.Panel1
             // 
+            splitContainer1.Panel1.Controls.Add(nudDiskLimit);
+            splitContainer1.Panel1.Controls.Add(label3);
+            splitContainer1.Panel1.Controls.Add(label1);
             splitContainer1.Panel1.Controls.Add(lblDirSize);
             splitContainer1.Panel1.Controls.Add(cbResolution);
             splitContainer1.Panel1.Controls.Add(label2);
@@ -99,8 +106,48 @@
             // 
             splitContainer1.Panel2.Controls.Add(pictureBox1);
             splitContainer1.Size = new Size(1267, 844);
-            splitContainer1.SplitterDistance = 172;
+            splitContainer1.SplitterDistance = 188;
             splitContainer1.TabIndex = 1;
+            // 
+            // nudDiskLimit
+            // 
+            nudDiskLimit.Increment = new decimal(new int[] { 100, 0, 0, 0 });
+            nudDiskLimit.Location = new Point(946, 80);
+            nudDiskLimit.Maximum = new decimal(new int[] { 500000, 0, 0, 0 });
+            nudDiskLimit.Minimum = new decimal(new int[] { 100, 0, 0, 0 });
+            nudDiskLimit.Name = "nudDiskLimit";
+            nudDiskLimit.Size = new Size(120, 25);
+            nudDiskLimit.TabIndex = 27;
+            nudDiskLimit.ThousandsSeparator = true;
+            nudDiskLimit.Value = new decimal(new int[] { 100, 0, 0, 0 });
+            // 
+            // label3
+            // 
+            label3.AutoSize = true;
+            label3.Location = new Point(1098, 82);
+            label3.Name = "label3";
+            label3.Size = new Size(41, 17);
+            label3.TabIndex = 26;
+            label3.Text = "Used:";
+            // 
+            // label1
+            // 
+            label1.AutoSize = true;
+            label1.Location = new Point(843, 82);
+            label1.Name = "label1";
+            label1.Size = new Size(97, 17);
+            label1.TabIndex = 24;
+            label1.Text = "Disk Limit (MB):";
+            // 
+            // lblDirSize
+            // 
+            lblDirSize.AutoSize = true;
+            lblDirSize.Location = new Point(1145, 82);
+            lblDirSize.Name = "lblDirSize";
+            lblDirSize.Size = new Size(15, 17);
+            lblDirSize.TabIndex = 23;
+            lblDirSize.Text = "0";
+            lblDirSize.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // cbResolution
             // 
@@ -124,7 +171,7 @@
             // lblPath
             // 
             lblPath.AutoSize = true;
-            lblPath.Location = new Point(854, 58);
+            lblPath.Location = new Point(854, 47);
             lblPath.Name = "lblPath";
             lblPath.Size = new Size(86, 17);
             lblPath.TabIndex = 19;
@@ -132,7 +179,7 @@
             // 
             // tbPath
             // 
-            tbPath.Location = new Point(946, 56);
+            tbPath.Location = new Point(946, 45);
             tbPath.Name = "tbPath";
             tbPath.Size = new Size(294, 25);
             tbPath.TabIndex = 18;
@@ -224,7 +271,7 @@
             // lblImagePath
             // 
             lblImagePath.AutoSize = true;
-            lblImagePath.Location = new Point(508, 133);
+            lblImagePath.Location = new Point(508, 142);
             lblImagePath.Name = "lblImagePath";
             lblImagePath.Size = new Size(73, 17);
             lblImagePath.TabIndex = 5;
@@ -242,7 +289,7 @@
             // 
             // PreviousButton
             // 
-            PreviousButton.Location = new Point(19, 133);
+            PreviousButton.Location = new Point(19, 142);
             PreviousButton.Name = "PreviousButton";
             PreviousButton.Size = new Size(75, 28);
             PreviousButton.TabIndex = 2;
@@ -252,7 +299,7 @@
             // 
             // NextButton
             // 
-            NextButton.Location = new Point(1165, 133);
+            NextButton.Location = new Point(1165, 142);
             NextButton.Name = "NextButton";
             NextButton.Size = new Size(75, 28);
             NextButton.TabIndex = 1;
@@ -264,20 +311,11 @@
             // 
             tbImage.AutoSize = false;
             tbImage.BackColor = Color.WhiteSmoke;
-            tbImage.Location = new Point(12, 95);
+            tbImage.Location = new Point(12, 104);
             tbImage.Name = "tbImage";
             tbImage.Size = new Size(1228, 37);
             tbImage.TabIndex = 0;
             tbImage.ValueChanged += trackBar1_ValueChanged;
-            // 
-            // lblDirSize
-            // 
-            lblDirSize.AutoSize = true;
-            lblDirSize.Location = new Point(854, 78);
-            lblDirSize.Name = "lblDirSize";
-            lblDirSize.Size = new Size(43, 17);
-            lblDirSize.TabIndex = 23;
-            lblDirSize.Text = "label1";
             // 
             // Form1
             // 
@@ -298,6 +336,7 @@
             splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)splitContainer1).EndInit();
             splitContainer1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)nudDiskLimit).EndInit();
             ((System.ComponentModel.ISupportInitialize)tbFrequency).EndInit();
             ((System.ComponentModel.ISupportInitialize)tbImage).EndInit();
             ResumeLayout(false);
@@ -325,5 +364,8 @@
         private ComboBox cbResolution;
         private Label label2;
         private Label lblDirSize;
+        private Label label3;
+        private Label label1;
+        private NumericUpDown nudDiskLimit;
     }
 }

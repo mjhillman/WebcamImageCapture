@@ -23,5 +23,8 @@
     <Setting Name="ResolutionIndex" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">3</Value>
     </Setting>
+    <Setting Name="DiskLimit" Type="System.Int64" Scope="User">
+      <Value Profile="(Default)">300</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
