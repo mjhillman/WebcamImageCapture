@@ -9,7 +9,6 @@ namespace WebcamImageCapture
         private ImageViewModel model = new ImageViewModel();
         private CaptureService captureService = new();
         EventMgr eventMgr = new EventMgr();
-        private const long MEGABYTE = 1048576;
 
         public Form1()
         {
@@ -47,8 +46,12 @@ namespace WebcamImageCapture
                 rbWebcam2.Checked = true;
             }
             cbResolution.SelectedIndex = Properties.Settings.Default.ResolutionIndex;
-            nudDiskLimit.Value = Properties.Settings.Default.DiskLimit / MEGABYTE;
-            lblDirSize.Text = (CaptureService.GetDirectorySize(Properties.Settings.Default.CapturePath) / MEGABYTE).ToString("G") + " MB";
+            if (Properties.Settings.Default.DiskLimit == 0)
+            {
+                Properties.Settings.Default.DiskLimit = 100 * CaptureService.MEGABYTE;
+            }
+            nudDiskLimit.Value = Properties.Settings.Default.DiskLimit / CaptureService.MEGABYTE;
+            lblDirSize.Text = (CaptureService.GetDirectorySize(Properties.Settings.Default.CapturePath) / CaptureService.MEGABYTE).ToString("G") + " MB";
             ServiceStopped();
         }
 
@@ -66,7 +69,7 @@ namespace WebcamImageCapture
             Properties.Settings.Default.SnapshotFrequency = tbFrequency.Value;
             Properties.Settings.Default.WebcamIndex = webcamIndex;
             Properties.Settings.Default.ResolutionIndex = cbResolution.SelectedIndex;
-            Properties.Settings.Default.DiskLimit = (long)nudDiskLimit.Value * MEGABYTE;
+            Properties.Settings.Default.DiskLimit = (long)nudDiskLimit.Value * CaptureService.MEGABYTE;
             Properties.Settings.Default.Save();
         }
 
@@ -172,7 +175,7 @@ namespace WebcamImageCapture
                                 tbImage.Value = tbImage.Maximum;
                                 model.ImageLocation = fileList[tbImage.Maximum];
                                 lblImagePath.Text = fileList[tbImage.Maximum];
-                                long mbs = (long)eventData.Args / MEGABYTE;
+                                long mbs = (long)eventData.Args / CaptureService.MEGABYTE;
                                 lblDirSize.Text = $"{mbs:#,0} MB";
                             }
                         }));

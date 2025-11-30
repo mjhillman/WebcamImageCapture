@@ -11,6 +11,7 @@ namespace WebcamImageCapture
         private VideoCapture _capture;
         private string _capturePath;
         private long _lastDirSize = 0;
+        public const long MEGABYTE = 1048576;
 
         //events
         private EventMgr mgr = new EventMgr();
@@ -76,7 +77,7 @@ namespace WebcamImageCapture
         private void CaptureDirSize(object sender, ElapsedEventArgs e)
         {
             _lastDirSize = GetDirectorySize(_capturePath);
-            if (_lastDirSize > _diskLimit)
+            if (_lastDirSize > _diskLimit * MEGABYTE)
             {
                 mgr.PublishEvent(new EventData
                 {
