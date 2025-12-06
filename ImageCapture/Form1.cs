@@ -141,12 +141,13 @@ namespace WebcamImageCapture
             {
                 EventData eventData = m.Value as EventData;
                 if (eventData.Token == CaptureService.MAX__DIR_SIZE_EXCEEDED)
-                {
-                    butStopService_Click(this, EventArgs.Empty);
+                {                    
                     SafeInvoke(() =>
+                    {
+                        butStopService_Click(this, EventArgs.Empty);
                         MessageBox.Show($"Capture directory size has exceeded the maximum limit ({this.nudDiskLimit.Value:G} MB). Please delete some files.",
-                        "Directory Size Exceeded", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-                    );
+                        "Directory Size Exceeded", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    });
                 }
             }
             catch (Exception ex)
@@ -163,36 +164,19 @@ namespace WebcamImageCapture
 
                 if (eventData != null && !string.IsNullOrEmpty(eventData.Data?.ToString()))
                 {
-                    // Marshal ALL UI updates to the UI thread
-                    if (this.InvokeRequired)
+                    SafeInvoke(() =>
                     {
-                        this.Invoke((MethodInvoker)(() =>
-                        {
-                            fileList.Add(eventData.Data.ToString());
-                            tbImage.Maximum = fileList.Count - 1;
-                            if (cbAuto.Checked)
-                            {
-                                tbImage.Value = tbImage.Maximum;
-                                model.ImageLocation = fileList[tbImage.Maximum];
-                                lblImagePath.Text = fileList[tbImage.Maximum];
-                                long mbs = (long)eventData.Args / CaptureService.MEGABYTE;
-                                lblDirSize.Text = $"{mbs:#,0} MB";
-                            }
-                        }));
-                    }
-                    else
-                    {
-                        // Already on UI thread
                         fileList.Add(eventData.Data.ToString());
                         tbImage.Maximum = fileList.Count - 1;
                         if (cbAuto.Checked)
                         {
                             tbImage.Value = tbImage.Maximum;
-                            model.ImageLocation = fileList[tbImage.Value];
+                            model.ImageLocation = fileList[tbImage.Maximum];
                             lblImagePath.Text = fileList[tbImage.Maximum];
-                            lblDirSize.Text = $"{eventData.Args:#,0} bytes";
-                        }
-                    }
+                            long mbs = (long)eventData.Args / CaptureService.MEGABYTE;
+                            lblDirSize.Text = $"{mbs:#,0} MB";
+                        };
+                    });
                 }
                 else
                 {
